@@ -7,6 +7,10 @@ metadata:
 spec:
   strategy:
     type: Recreate
+  selector:
+    matchLabels:
+      app: puzzle
+      tier: puzzle 
   template:
     metadata:
       labels:
