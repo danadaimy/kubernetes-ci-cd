@@ -38,3 +38,5 @@ spec:
         ports:
         - containerPort: 80
           name: hello-kenzan
+      imagePullSecrets:
+        - name: acr-auth2
