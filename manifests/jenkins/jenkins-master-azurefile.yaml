@@ -16,7 +16,7 @@ spec:
     # Replace with your secret name
     secretName: k8sdanydiag-secret
     # Replace with correct storage share name
-    shareName: jenkins-data/jenkins-master
+    shareName: jenkins-data
     # In case the secret is stored in a different namespace
     #shareNamespace: default
     readOnly: false
@@ -83,6 +83,22 @@ spec:
 
 ---
 
+apiVersion: v1
+kind: Service
+metadata:
+  name: jenkins-jnlp
+  labels:
+    app: jenkins-jnlp
+spec:
+  ports:
+    - port: 50000
+      targetPort: 50000
+  selector:
+    app: jenkins-master
+  type: ClusterIP
+
+---
+
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -102,10 +118,12 @@ spec:
       - image: ranchofactory.azurecr.io/jenkins-master:latest
         name: jenkins-master
         securityContext:
+          runAsUser: 0
           privileged: true
         volumeMounts:
         - name: jenkins-persistent-storage
           mountPath: /var/jenkins_home
+          readOnly: false
         ports:
         - containerPort: 8080
           name: jenkins

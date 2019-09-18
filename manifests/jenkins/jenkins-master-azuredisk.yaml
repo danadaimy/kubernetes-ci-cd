@@ -1,0 +1,133 @@
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: jenkins-master-data
+  # The label is used for matching the exact claim
+  labels:
+    usage: jenkins-master-data
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  azureDisk:
+    kind: Managed
+    diskName: jenkins-data
+    diskURI: /subscriptions/ed8bff5d-3a57-4221-8775-be55737d264f/resourceGroups/k8sdany/providers/Microsoft.Compute/disks/jenkins-data
+    readOnly: false
+
+---
+
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: jenkins-master-claim
+  annotations:
+    volume.beta.kubernetes.io/storage-class: ""
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+  selector:
+    matchLabels:
+       usage: jenkins-master-data
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: jenkins
+  namespace: default
+secrets:
+  - name: k8sdanydiag-secret
+automountServiceAccountToken: true
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: Jenkins-cluster-admin
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- kind: ServiceAccount
+  name: jenkins
+  namespace: default
+
+---
+
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: jenkins-master
+  labels:
+    app: jenkins-master
+spec:
+  ports:
+    - port: 80
+      targetPort: 8080
+  selector:
+    app: jenkins-master
+  type: NodePort
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: jenkins-jnlp
+  labels:
+    app: jenkins-jnlp
+spec:
+  ports:
+    - port: 50000
+      targetPort: 50000
+  selector:
+    app: jenkins-master
+  type: ClusterIP
+
+---
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: jenkins-master
+  labels:
+    app: jenkins-master
+spec:
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: jenkins-master
+    spec:
+      serviceAccountName: jenkins
+      containers:
+      - image: ranchofactory.azurecr.io/jenkins-master:old
+        name: jenkins-master
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: jenkins-persistent-storage
+          mountPath: /var/jenkins_home
+          readOnly: false
+        ports:
+        - containerPort: 8080
+          name: jenkins
+        - containerPort: 50000
+          name: jnlp-port
+      imagePullSecrets:
+        - name: acr-auth2
+      volumes:
+      - name: jenkins-persistent-storage
+        persistentVolumeClaim:
+          claimName: jenkins-master-claim
