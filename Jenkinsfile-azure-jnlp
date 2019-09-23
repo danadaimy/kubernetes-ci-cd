@@ -1,5 +1,4 @@
-def yamlFile = readFile('manifests/jenkins/pod-template.yaml')
-podTemplate(yaml: yamlFile) {
+podTemplate(yaml: readFile('manifests/jenkins/pod-template.yaml')) {
  node(POD_LABEL) {
     stage('Run kubectl') {
       container('kubectl') {
