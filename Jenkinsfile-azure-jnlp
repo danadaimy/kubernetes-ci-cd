@@ -1,14 +1,24 @@
-podTemplate(yaml: readFile('manifests/jenkins/pod-template.yaml')) {
- node(POD_LABEL) {
+pipeline {
+  agent {
+    kubernetes {
+      yamlFile 'manifests/jenkins/pod-template.yaml'   
+    }
+  }
+  stages {
     stage('Run kubectl') {
-      container('kubectl') {
-        sh "kubectl get pods"
+      steps {
+        container('kubectl') {
+          sh "kubectl get pods"
+        }
       }
     }
     stage('Run helm') {
-      container('helm') {
-        sh "helm list"
+      steps {
+        container('helm') {
+          sh "helm list"
+        }
       }
     }
   }
 }
+
