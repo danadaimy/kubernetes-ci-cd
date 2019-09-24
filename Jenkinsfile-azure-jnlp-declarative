@@ -8,9 +8,9 @@ pipeline {
     stage('Initialize Environment') {
       steps {
         script {
-          file = readFile 'manifests/jenkins/pod-template.yaml'
+          env.TEMPLATE = readFile 'manifests/jenkins/pod-template.yaml'
         } 
-        sh "cat ${file}"
+        sh "echo ${env.TEMPLATE}"
       }
     }
     stage('Run kubectl') {
