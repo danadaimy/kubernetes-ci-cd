@@ -8,6 +8,8 @@ pipeline {
     stage('Initialize Environment') {
       steps {
         script {
+          env.TEST = 'hello'
+          sh "echo assigning yaml file to env var BTW: env.TEST = ${env.TEST}"
           env.TEMPLATE = readFile 'manifests/jenkins/pod-template.yaml'
         } 
       }
@@ -15,9 +17,9 @@ pipeline {
     stage('Run kubectl') {
       steps {
         container('kubectl') {
-          sh "echo testing testing testing"
           sh "kubectl get pods"
-          sh "echo ${env.TEMPLATE}"
+          sh "echo spiting out env.TEST"
+          sh "echo ${env.TEST}"
         }
       }
     }
