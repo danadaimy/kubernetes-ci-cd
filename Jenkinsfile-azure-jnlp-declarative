@@ -10,13 +10,13 @@ pipeline {
         script {
           env.TEMPLATE = readFile 'manifests/jenkins/pod-template.yaml'
         } 
-        sh "echo ${env.TEMPLATE}"
       }
     }
     stage('Run kubectl') {
       steps {
         container('kubectl') {
           sh "kubectl get pods"
+          sh "echo ${env.TEMPLATE}"
         }
       }
     }
