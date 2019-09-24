@@ -1,0 +1,28 @@
+pipeline {
+  agent {
+    kubernetes {
+      yamlFile 'manifests/jenkins/pod-template.yaml'   
+    }
+  }
+  stages {
+    stage('Initialize Environment') {
+      file = readFile 'manifests/jenkins/pod-template.yaml' 
+      sh "cat ${file}
+    }
+    stage('Run kubectl') {
+      steps {
+        container('kubectl') {
+          sh "kubectl get pods"
+        }
+      }
+    }
+    stage('Run helm') {
+      steps {
+        container('helm') {
+          sh "helm list"
+        }
+      }
+    }
+  }
+}
+
